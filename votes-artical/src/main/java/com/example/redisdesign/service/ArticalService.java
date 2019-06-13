@@ -1,16 +1,13 @@
 package com.example.redisdesign.service;
 
 import com.example.redisdesign.entity.ArticalRecommand;
+import com.example.redisdesign.utils.LongUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author xch
@@ -31,17 +28,17 @@ public class ArticalService {
      */
     public void putArtical(String title, String link, Long userId, String img) {
         Long articalId = redisTemplate.opsForValue().increment("artical:");
-        String time = Instant.now().toString();
+        Long time = System.currentTimeMillis();
         redisTemplate.opsForHash().put("artical:" + articalId, "link", link);
-        redisTemplate.opsForHash().put("artical:" + articalId, "userId", userId);
+        redisTemplate.opsForHash().put("artical:" + articalId, "userId", String.valueOf(userId));
         redisTemplate.opsForHash().put("artical:" + articalId, "img", img);
         redisTemplate.opsForHash().put("artical:" + articalId, "title", title);
-        redisTemplate.opsForHash().put("artical:" + articalId, "time", time);
-        redisTemplate.opsForHash().put("artical:" + articalId, "votes", 0);
+        redisTemplate.opsForHash().put("artical:" + articalId, "time", String.valueOf(time));
+        redisTemplate.opsForHash().put("artical:" + articalId, "votes", "0");
         //时间排序
-        redisTemplate.opsForZSet().add("time", String.valueOf(articalId), Double.valueOf(time));
+        redisTemplate.opsForZSet().add("time:", String.valueOf(articalId), time);
         //投票数排序,最开始投票为0
-        redisTemplate.opsForZSet().add("score", String.valueOf(articalId), Double.valueOf(time));
+        redisTemplate.opsForZSet().add("score:", String.valueOf(articalId), time);
         //作者为自己要投一票
         voteArtical(userId, articalId);
     }
@@ -54,12 +51,12 @@ public class ArticalService {
      */
     public void voteArtical(Long userId, Long articalId) {
         //查看该用户是否已经投票，没投票才能发起投票
-        long res = redisTemplate.opsForSet().add("votes:" + articalId, String.valueOf(userId));
-        if (res == 1) {
+        Long res = redisTemplate.opsForSet().add("votes:" + articalId, String.valueOf(userId));
+        if (res !=null && res == 1) {
             //文章票数加1
             redisTemplate.opsForHash().increment("artical:" + articalId, "votes", 1);
             //投票排序改变
-            redisTemplate.opsForZSet().incrementScore("score", String.valueOf(articalId), 1d);
+            redisTemplate.opsForZSet().incrementScore("score:", String.valueOf(articalId), 1d);
         }
 
     }
@@ -76,23 +73,24 @@ public class ArticalService {
         int end = start + size - 1;
         Set<String> articals;
         if (searchItem != null && searchItem.equals("time")) {
-            articals = redisTemplate.opsForZSet().reverseRange("time", start, end);
+            articals = redisTemplate.opsForZSet().reverseRange("time:", start, end);
         } else {
-            articals = redisTemplate.opsForZSet().reverseRange("score", start, end);
+            articals = redisTemplate.opsForZSet().reverseRange("score:", start, end);
         }
         List<ArticalRecommand> recommandList = new ArrayList<>();
         Optional.ofNullable(articals).ifPresent(articalIds -> {
                     for (String articalId : articalIds) {
-                        ArticalRecommand articalRecommand = ArticalRecommand.builder()
-                                .id(Long.valueOf(articalId))
-                                .img(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "img")))
-                                .votes((Long) redisTemplate.opsForHash().get("artical:" + articalId, "votes"))
-                                .link(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "link")))
-                                .time(DateTimeFormatter.ofPattern("yyyy-MM-dd").format(Instant.ofEpochSecond(Long.valueOf(
-                                        (Long) redisTemplate.opsForHash().get("artical:" + articalId, "time")
-                                ))))
-                                .title(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "title")))
-                                .userId((Long) redisTemplate.opsForHash().get("artical:" + articalId, "userId"))
+                        ArticalRecommand.ArticalRecommandBuilder builder = ArticalRecommand.builder();
+                        builder.id(Long.valueOf(articalId));
+                        builder.img(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "img")));
+                        builder.votes(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "votes")));
+                        builder.link(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "link")));
+                        builder.time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(
+                                LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "time"))
+                        )));
+                        builder.title(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "title")));
+                        builder.userId(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "userId")));
+                        ArticalRecommand articalRecommand = builder
                                 .build();
                         recommandList.add(articalRecommand);
                     }
