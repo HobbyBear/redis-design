@@ -28,7 +28,7 @@ public class ArticalService {
      */
     public void putArtical(String title, String link, Long userId, String img) {
         Long articalId = redisTemplate.opsForValue().increment("artical:");
-        Long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         redisTemplate.opsForHash().put("artical:" + articalId, "link", link);
         redisTemplate.opsForHash().put("artical:" + articalId, "userId", String.valueOf(userId));
         redisTemplate.opsForHash().put("artical:" + articalId, "img", img);
@@ -52,7 +52,7 @@ public class ArticalService {
     public void voteArtical(Long userId, Long articalId) {
         //查看该用户是否已经投票，没投票才能发起投票
         Long res = redisTemplate.opsForSet().add("votes:" + articalId, String.valueOf(userId));
-        if (res !=null && res == 1) {
+        if (res != null && res == 1) {
             //文章票数加1
             redisTemplate.opsForHash().increment("artical:" + articalId, "votes", 1);
             //投票排序改变
@@ -80,18 +80,16 @@ public class ArticalService {
         List<ArticalRecommand> recommandList = new ArrayList<>();
         Optional.ofNullable(articals).ifPresent(articalIds -> {
                     for (String articalId : articalIds) {
-                        ArticalRecommand.ArticalRecommandBuilder builder = ArticalRecommand.builder();
-                        builder.id(Long.valueOf(articalId));
-                        builder.img(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "img")));
-                        builder.votes(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "votes")));
-                        builder.link(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "link")));
-                        builder.time(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(
+                        ArticalRecommand articalRecommand = new ArticalRecommand();
+                        articalRecommand.setId(Long.valueOf(articalId));
+                        articalRecommand.setImg(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "img")));
+                        articalRecommand.setVotes(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "votes")));
+                        articalRecommand.setLink(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "link")));
+                        articalRecommand.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(
                                 LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "time"))
                         )));
-                        builder.title(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "title")));
-                        builder.userId(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "userId")));
-                        ArticalRecommand articalRecommand = builder
-                                .build();
+                        articalRecommand.setTitle(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "title")));
+                        articalRecommand.setUserId(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "userId")));
                         recommandList.add(articalRecommand);
                     }
                 }
