@@ -1,6 +1,7 @@
 package com.example.redisdesign.service;
 
 import com.example.redisdesign.entity.ArticalRecommand;
+import com.example.redisdesign.utils.LongUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
@@ -29,10 +29,10 @@ public class ArticalServiceTest {
 
     @Test
     public void voteArtical() {
-        String d =  new DecimalFormat("0").format(redisTemplate.opsForZSet().score("score:","1"));
+        Long d = LongUtil.parse(redisTemplate.opsForZSet().score("score:","1"));
         articalService.voteArtical(2L, 1L);
-        String d2 =  new DecimalFormat("0").format(redisTemplate.opsForZSet().score("score:","1"));
-        Assert.assertEquals(Long.valueOf(d2).longValue(), Long.valueOf(d) + 1);
+        Long d2 = LongUtil.parse(redisTemplate.opsForZSet().score("score:","1"));
+        Assert.assertEquals(d2.longValue(), d+1);
     }
 
     @Test
