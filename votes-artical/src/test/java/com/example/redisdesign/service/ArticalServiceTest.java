@@ -1,26 +1,24 @@
 package com.example.redisdesign.service;
 
-import com.example.redisdesign.entity.ArticalRecommand;
+import com.example.redisdesign.BaseTest;
+import com.example.redisdesign.entity.ArticalRecommandVo;
 import com.example.redisdesign.utils.LongUtil;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class ArticalServiceTest {
+public class ArticalServiceTest extends BaseTest {
 
     @Autowired
     private ArticalService articalService;
 
     @Autowired
     StringRedisTemplate redisTemplate;
+
+
 
     @Test
     public void putArtical() {
@@ -37,8 +35,10 @@ public class ArticalServiceTest {
 
     @Test
     public void getArticalList() {
-        List<ArticalRecommand> recommandList = articalService.getArticalList(1,null,1);
-        System.out.println(recommandList);
+        List<ArticalRecommandVo> recommandList = articalService.getArticalList(1,null,1);
+        Assert.assertEquals(1,recommandList.size());
     }
+
+
 
 }

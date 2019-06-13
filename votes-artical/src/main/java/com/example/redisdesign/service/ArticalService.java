@@ -1,6 +1,6 @@
 package com.example.redisdesign.service;
 
-import com.example.redisdesign.entity.ArticalRecommand;
+import com.example.redisdesign.entity.ArticalRecommandVo;
 import com.example.redisdesign.utils.LongUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -68,7 +68,7 @@ public class ArticalService {
      * @param searchItem time ,score 排序条件,默认为score排序
      * @param size
      */
-    public List<ArticalRecommand> getArticalList(int page, String searchItem, int size) {
+    public List<ArticalRecommandVo> getArticalList(int page, String searchItem, int size) {
         int start = (page - 1) * size;
         int end = start + size - 1;
         Set<String> articals;
@@ -77,10 +77,10 @@ public class ArticalService {
         } else {
             articals = redisTemplate.opsForZSet().reverseRange("score:", start, end);
         }
-        List<ArticalRecommand> recommandList = new ArrayList<>();
+        List<ArticalRecommandVo> recommandList = new ArrayList<>();
         Optional.ofNullable(articals).ifPresent(articalIds -> {
                     for (String articalId : articalIds) {
-                        ArticalRecommand articalRecommand = new ArticalRecommand();
+                        ArticalRecommandVo articalRecommand = new ArticalRecommandVo();
                         articalRecommand.setId(Long.valueOf(articalId));
                         articalRecommand.setImg(String.valueOf(redisTemplate.opsForHash().get("artical:" + articalId, "img")));
                         articalRecommand.setVotes(LongUtil.parse(redisTemplate.opsForHash().get("artical:" + articalId, "votes")));

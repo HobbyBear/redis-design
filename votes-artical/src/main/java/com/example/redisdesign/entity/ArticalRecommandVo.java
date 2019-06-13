@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ArticalRecommand {
+public class ArticalRecommandVo {
 
     /**
      * 文章id
