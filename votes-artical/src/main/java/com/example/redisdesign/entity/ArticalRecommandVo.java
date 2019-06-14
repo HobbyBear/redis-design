@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 
 /**
  * 推荐文章实体类
@@ -19,6 +20,7 @@ public class ArticalRecommandVo {
     /**
      * 文章id
      */
+    @Id
     private Long id;
 
     /**
